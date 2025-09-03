@@ -1,22 +1,21 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   signInStart,
   signInSuccess,
   signInFailure,
 } from "../redux/user/userSlice.js";
 import { FaEye, FaEyeSlash, FaInfoCircle, FaHome } from "react-icons/fa";
+import OAuth from "../components/OAuth.jsx";
 
-export default function Signup() {
+export default function SignUp() {
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     phone: "",
     password: "",
-    confirmPassword: "",
-    requestAdmin: false,
-    adminRequestMessage: ""
+    confirmPassword: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -24,12 +23,13 @@ export default function Signup() {
 
   const { loading, error } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({ 
       ...formData, 
-      [name]: type === "checkbox" ? checked : value 
+      [name]: value 
     });
 
     // Verificar força da senha em tempo real
@@ -83,6 +83,7 @@ export default function Signup() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submitData),
+        credentials: "include", 
       });
       
       const data = await res.json();
@@ -92,6 +93,14 @@ export default function Signup() {
       }
       
       dispatch(signInSuccess(data));
+      
+      // Redirecionar para a página de login com mensagem de sucesso
+      navigate("/signin", { 
+        state: { 
+          message: "Conta criada com sucesso! Faça login para continuar." 
+        } 
+      });
+      
     } catch (err) {
       dispatch(signInFailure(err.message));
     }
@@ -114,14 +123,14 @@ export default function Signup() {
         
         <form className="p-6 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
               Nome Completo
             </label>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={formData.name}
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
               required
               className="w-full rounded-xl border border-gray-300 px-4 py-3 shadow-sm focus:border-gray-700 focus:ring-2 focus:ring-gray-300 transition-colors"
@@ -231,46 +240,6 @@ export default function Signup() {
             </div>
           </div>
           
-          <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-            <div className="flex items-start mb-2">
-              <input
-                type="checkbox"
-                id="requestAdmin"
-                name="requestAdmin"
-                checked={formData.requestAdmin}
-                onChange={handleChange}
-                className="mt-1 mr-2"
-              />
-              <label htmlFor="requestAdmin" className="text-sm font-medium text-gray-700">
-                Solicitar acesso de administrador
-              </label>
-            </div>
-            
-            <div className="text-xs text-gray-600 flex items-start mt-1">
-              <FaInfoCircle className="mt-0.5 mr-1 flex-shrink-0" />
-              <span>
-                Marque esta opção se deseja cadastrar propriedades. Sua solicitação será analisada pela nossa equipe.
-              </span>
-            </div>
-            
-            {formData.requestAdmin && (
-              <div className="mt-3">
-                <label htmlFor="adminRequestMessage" className="block text-sm font-medium text-gray-700 mb-1">
-                  Mensagem de solicitação (opcional)
-                </label>
-                <textarea
-                  id="adminRequestMessage"
-                  name="adminRequestMessage"
-                  value={formData.adminRequestMessage}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-2 shadow-sm focus:border-gray-700 focus:ring-2 focus:ring-gray-300 transition-colors text-sm"
-                  placeholder="Explique por que você precisa de acesso de administrador..."
-                ></textarea>
-              </div>
-            )}
-          </div>
-          
           {error && (
             <div className="rounded-xl bg-red-50 p-3">
               <p className="text-sm text-red-700 flex items-center">
@@ -295,6 +264,14 @@ export default function Signup() {
               </>
             ) : "Criar Conta"}
           </button>
+
+          <div className="relative flex items-center">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="flex-shrink mx-4 text-gray-600 text-sm">OU</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
+
+          <OAuth />
         </form>
         
         <div className="px-6 pb-6">

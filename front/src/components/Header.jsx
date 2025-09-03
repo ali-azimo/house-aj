@@ -2,23 +2,52 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   FaHome, 
-  FaPhoneAlt, 
   FaUserCircle, 
   FaSignInAlt, 
   FaUserPlus, 
   FaBars, 
-  FaTimes 
+  FaTimes,
+  FaUserShield,
+  FaUserTie,
+  FaUser
 } from "react-icons/fa";
 import { FiLogOut } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserStart, signOutUserSuccess } from "../redux/user/userSlice";
+
 const navLinks = [
   { label: "Início", href: "/" },
   { label: "Comprar", href: "/comprar" },
   { label: "Arrendar", href: "/arrendar" },
-  { label: "Sobre", href: "/about" },
-  { label: "Contactos", href: "/contactos" },
+  { label: "Sobre", href: "/about" }
 ];
+
+// Função para obter ícone e cor baseado no tipo de usuário
+const getUserTypeInfo = (role) => {
+  switch (role) {
+    case "admin":
+      return {
+        icon: FaUserShield,
+        color: "text-red-600",
+        bgColor: "bg-red-100",
+        label: "Administrador"
+      };
+    case "customer":
+      return {
+        icon: FaUserTie,
+        color: "text-blue-600",
+        bgColor: "bg-blue-100",
+        label: "Cliente"
+      };
+    default:
+      return {
+        icon: FaUser,
+        color: "text-green-600",
+        bgColor: "bg-green-100",
+        label: "Utilizador"
+      };
+  }
+};
 
 export default function HeaderImobiliaria() {
   const [open, setOpen] = useState(false);
@@ -30,6 +59,14 @@ export default function HeaderImobiliaria() {
   const navigate = useNavigate();
 
   const { currentUser } = useSelector((state) => state.user);
+  
+  // Extrair o role do usuário (pode estar em diferentes níveis do objeto)
+  const userRole = currentUser?.role || 
+                  (currentUser?.user && currentUser.user.role) || 
+                  (currentUser?.data && currentUser.data.role) || 
+                  "user";
+  
+  const userTypeInfo = getUserTypeInfo(userRole);
 
   // Handler para scroll com useCallback para otimização
   const handleScroll = useCallback(() => {
@@ -94,7 +131,7 @@ export default function HeaderImobiliaria() {
                 <span className="block text-base font-bold tracking-tight text-gray-900 group-hover:opacity-90">
                   ImoElite
                 </span>
-                <span className="block text-xs text-gray-500">Imobiliária Profissional</span>
+                <span className="block text-xs text-gray-500">Imobiliária Premium</span>
               </div>
             </Link>
 
@@ -113,14 +150,6 @@ export default function HeaderImobiliaria() {
 
             {/* Ações à direita */}
             <div className="hidden md:flex items-center gap-3">
-              <a
-                href="tel:+258845826662"
-                className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <FaPhoneAlt aria-hidden="true" />
-                <span className="hidden lg:inline">+258 845 826 662</span>
-              </a>
-
               {!currentUser ? (
                 <div className="flex items-center gap-2">
                   <Link
@@ -147,37 +176,69 @@ export default function HeaderImobiliaria() {
                     aria-expanded={open}
                   >
                     <FaUserCircle className="text-lg" aria-hidden="true" />
-                    <span className="max-w-[120px] truncate">{currentUser?.username || "Conta"}</span>
+                    <span className="max-w-[120px] truncate">
+                      {currentUser?.username || currentUser?.email || "Conta"}
+                    </span>
+                    {/* Badge indicando o tipo de usuário */}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${userTypeInfo.bgColor} ${userTypeInfo.color}`}>
+                      <userTypeInfo.icon className="mr-1" size={12} />
+                      {userTypeInfo.label}
+                    </span>
                   </button>
                   {open && (
                     <div
                       ref={menuRef}
                       className="absolute right-0 mt-2 w-56 rounded-2xl border border-gray-200 bg-white p-2 shadow-xl z-50 animate-fade-in"
                     >
-                      <Link 
-                        to="/painel" 
-                        className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setOpen(false)}
-                      >
-                        Painel
-                      </Link>
-                      <Link 
-                        to="/favoritos" 
-                        className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setOpen(false)}
-                      >
-                        Favoritos
-                      </Link>
-                      <Link 
-                        to="/anuncios" 
-                        className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                        onClick={() => setOpen(false)}
-                      >
-                        Os meus anúncios
-                      </Link>
+                      {/* Informações do usuário */}
+                      <div className="px-3 py-2 border-b border-gray-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FaUserCircle className={`text-lg ${userTypeInfo.color}`} />
+                          <div>
+                            <div className="text-sm font-medium text-gray-900 truncate">
+                              {currentUser?.username || currentUser?.email}
+                            </div>
+                            <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${userTypeInfo.bgColor} ${userTypeInfo.color}`}>
+                              <userTypeInfo.icon className="mr-1" size={10} />
+                              {userTypeInfo.label}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Links de navegação baseados no role */}
+                      {userRole === "admin" && (
+                        <>
+                          <Link 
+                            to="/dashboard" 
+                            className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            onClick={() => setOpen(false)}
+                          >
+                            Painel Administrativo
+                          </Link>
+                          <Link 
+                            to="/dashboard/users" 
+                            className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            onClick={() => setOpen(false)}
+                          >
+                            Gerir Utilizadores
+                          </Link>
+                        </>
+                      )}
+                      
+                      {userRole === "customer" && (
+                        <Link 
+                          to="/customer/dashboard" 
+                          className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          onClick={() => setOpen(false)}
+                        >
+                          Área do Cliente
+                        </Link>
+                      )}
+
                       <button
                         onClick={handleLogout}
-                        className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        className="mt-2 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <FiLogOut />
                         Terminar sessão
@@ -186,13 +247,6 @@ export default function HeaderImobiliaria() {
                   )}
                 </div>
               )}
-
-              <Link
-                to="/anunciar"
-                className="ml-1 inline-flex items-center rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 px-4 py-2 text-sm font-semibold text-white shadow-md hover:opacity-95 transition-opacity"
-              >
-                Anunciar Imóvel
-              </Link>
             </div>
 
             {/* Botão mobile */}
@@ -237,7 +291,7 @@ export default function HeaderImobiliaria() {
                     <span className="block text-base font-bold tracking-tight text-gray-900">
                       ImoElite
                     </span>
-                    <span className="block text-xs text-gray-500">Imobiliária Profissional</span>
+                    <span className="block text-xs text-gray-500">Imobiliária Premium</span>
                   </div>
                 </Link>
                 <button
@@ -285,31 +339,52 @@ export default function HeaderImobiliaria() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 px-3 py-2 text-gray-700">
-                    <FaUserCircle className="text-xl" />
-                    <span className="max-w-[180px] truncate">{currentUser?.username || "Conta"}</span>
+                  {/* Informações do usuário no mobile */}
+                  <div className="px-3 py-2 border-b border-gray-200 mb-2">
+                    <div className="flex items-center gap-2">
+                      <FaUserCircle className={`text-xl ${userTypeInfo.color}`} />
+                      <div>
+                        <div className="text-base font-medium text-gray-900 truncate">
+                          {currentUser?.username || currentUser?.email}
+                        </div>
+                        <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${userTypeInfo.bgColor} ${userTypeInfo.color}`}>
+                          <userTypeInfo.icon className="mr-1" size={10} />
+                          {userTypeInfo.label}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <Link
-                    to="/painel"
-                    className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
-                    onClick={closeMobileMenu}
-                  >
-                    Painel
-                  </Link>
-                  <Link
-                    to="/favoritos"
-                    className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
-                    onClick={closeMobileMenu}
-                  >
-                    Favoritos
-                  </Link>
-                  <Link
-                    to="/anuncios"
-                    className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
-                    onClick={closeMobileMenu}
-                  >
-                    Os meus anúncios
-                  </Link>
+
+                  {/* Links de navegação baseados no role (mobile) */}
+                  {userRole === "admin" && (
+                    <>
+                      <Link
+                        to="/dashboard"
+                        className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
+                        onClick={closeMobileMenu}
+                      >
+                        Painel Administrativo
+                      </Link>
+                      <Link
+                        to="/dashboard/users"
+                        className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
+                        onClick={closeMobileMenu}
+                      >
+                        Gerir Utilizadores
+                      </Link>
+                    </>
+                  )}
+                  
+                  {userRole === "customer" && (
+                    <Link
+                      to="/customer/dashboard"
+                      className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
+                      onClick={closeMobileMenu}
+                    >
+                      Área do Cliente
+                    </Link>
+                  )}
+
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-base font-medium text-red-600 hover:bg-red-100 transition-colors"
@@ -319,24 +394,6 @@ export default function HeaderImobiliaria() {
                   </button>
                 </div>
               )}
-              
-              <div className="mt-4 pt-4 border-t border-gray-300">
-                <a
-                  href="tel:+258845826662"
-                  className="flex items-center gap-2 justify-center rounded-2xl border border-gray-300 px-4 py-3 text-base font-medium text-gray-700 hover:bg-gray-200 transition-colors"
-                >
-                  <FaPhoneAlt aria-hidden="true" />
-                  <span>+258 845 826 662</span>
-                </a>
-                
-                <Link
-                  to="/anunciar"
-                  className="mt-3 flex items-center justify-center rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 px-4 py-3 text-base font-semibold text-white shadow-md hover:opacity-95 transition-opacity"
-                  onClick={closeMobileMenu}
-                >
-                  Anunciar Imóvel
-                </Link>
-              </div>
             </div>
           </div>
         </div>

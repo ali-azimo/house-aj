@@ -1,33 +1,32 @@
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config();
-
-
-
+import authRoutes from "./routes/auth.Route.js";
+import userRoutes from "./routes/user.Route.js";
+import houseRoutes from "./routes/house.Route.js";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 
-// 🔹 Criar instância do Express
+dotenv.config();
 const app = express();
 
-// 🔹 Configuração de middlewares
-app.use(cors({
-  origin: process.env.CLIENT_URL || "*", // Permite requisições do frontend
-  credentials: true
-}));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// 🔹 Rotas da API
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+}));
 
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/houses", houseRoutes); // Supondo que as rotas de imóveis estão em userRoutes, ajuste conforme necessário
 
-// 🔹 Rota de teste
-app.get("/", (req, res) => {
-  res.send("Servidor de contabilidade ativo 🚀");
+// Middleware de erro
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Erro interno no servidor";
+  res.status(statusCode).json({ success: false, message });
 });
 
-
-// 🔹 Inicializar servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor a correr na porta ${PORT}`));
