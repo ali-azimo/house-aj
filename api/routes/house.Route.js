@@ -12,19 +12,19 @@ import {
 const router = express.Router();
 
 // Criar imóvel (apenas user autenticado)
-router.post("/", verifyToken, isUserOrAdmin, createHouse);
+router.post("/create/", verifyToken, isUserOrAdmin, createHouse);
 
 // Listar todos os imóveis com filtros (público)
 router.get("/get", getHouses);
 
 // Obter um imóvel específico por ID (público)
-router.get("/:id", getHouse);
+router.get("/get/:id", getHouse);
 
 // Atualizar imóvel (apenas dono do imóvel ou admin)
-router.put("/:id", verifyToken, isUserOrAdmin, updateHouse);
+router.put("/update/:id", verifyToken, isUserOrAdmin, updateHouse);
 
 // Excluir imóvel (apenas dono ou admin)
-router.delete("/:id", verifyToken, isUserOrAdmin, deleteHouse);
+router.delete("/delete/:id", verifyToken, isUserOrAdmin, deleteHouse);
 
 // Listar imóveis de um utilizador específico (só o próprio ou admin)
 router.get("/user/:userId", verifyToken, isUserOrAdmin, getUserHouses);

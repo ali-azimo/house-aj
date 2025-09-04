@@ -1,113 +1,68 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import {
-  FaMapMarkerAlt,
-  FaStar,
-  FaHeart,
-  FaRegHeart,
-  FaBed,
-  FaBath,
-  FaCar,
-  FaCouch,
-  FaUtensils
-} from "react-icons/fa";
+import { MdLocationOn, MdOutlineBathtub, MdBed, MdKitchen } from "react-icons/md";
+import { formatDistanceToNow } from "date-fns";
+import pt from "date-fns/locale/pt";
 
 export default function HouseItems({ house }) {
-  const [favorite, setFavorite] = useState(false);
+  // Garante que sempre tenha ID válido
+  const houseId = house.id || house._id;
 
-  const toggleFavorite = () => setFavorite((prev) => !prev);
-
-  const formatPrice = (price) =>
-    new Intl.NumberFormat("pt-MZ", {
-      style: "currency",
-      currency: "MZN",
-      minimumFractionDigits: 0
-    }).format(price);
-
-  const renderStars = (rating = 4) =>
-    Array.from({ length: 5 }, (_, i) => (
-      <FaStar key={i} className={i < rating ? "text-yellow-400" : "text-gray-300"} />
-    ));
+  // Garante imagem padrão caso não exista
+  const mainImage = house.imageUrls?.[0] || "/placeholder.jpg";
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow hover:shadow-lg transition-transform transform hover:-translate-y-1 border border-gray-100 flex flex-col w-full sm:w-[48%] lg:w-[23%]">
-      {/* Imagem */}
-      <div className="relative">
-        {house.imageUrls?.[0] ? (
-          <img
-            src={house.imageUrls[0]}
-            alt={house.name}
-            className="w-full h-48 object-cover transition-transform duration-700 hover:scale-110"
-          />
-        ) : (
-          <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500">
-            Sem imagem
+    <div className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+      <Link to={`/house/${houseId}`}>
+        <img
+          src={mainImage}
+          alt={house.name || "Imóvel"}
+          className="h-[180px] w-full object-cover"
+        />
+        <div className="p-3 flex flex-col gap-2">
+          <h3 className="font-semibold text-slate-700 truncate">{house.name || "Sem nome"}</h3>
+
+          {house.descricao && (
+            <p className="text-gray-600 text-sm line-clamp-2">{house.descricao}</p>
+          )}
+
+          {house.address && (
+            <div className="flex items-center text-gray-600 text-sm">
+              <MdLocationOn className="mr-1" /> {house.address}
+            </div>
+          )}
+
+          <div className="flex justify-between text-sm mt-2 text-gray-700 flex-wrap gap-2">
+            {house.bedroom > 0 && (
+              <div className="flex items-center gap-1">
+                <MdBed /> {house.bedroom} {house.bedroom > 1 ? "quartos" : "quarto"}
+              </div>
+            )}
+            {house.bathroom > 0 && (
+              <div className="flex items-center gap-1">
+                <MdOutlineBathtub /> {house.bathroom} {house.bathroom > 1 ? "banheiros" : "banheiro"}
+              </div>
+            )}
+            {house.kitchen > 0 && (
+              <div className="flex items-center gap-1">
+                <MdKitchen /> {house.kitchen} {house.kitchen > 1 ? "cozinhas" : "cozinha"}
+              </div>
+            )}
+            {house.parking > 0 && <div>🚗 {house.parking}</div>}
           </div>
-        )}
 
-        {/* Botão Favorito */}
-        <button
-          onClick={toggleFavorite}
-          className="absolute top-3 right-3 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition-colors"
-        >
-          {favorite ? <FaHeart className="text-red-500" /> : <FaRegHeart className="text-gray-600" />}
-        </button>
+          <p className="font-bold mt-2 text-slate-700">
+            {house.offer ? house.discountPrice : house.regularPrice} MT
+            {house.type === "rent" && " / mês"}
+          </p>
 
-        {/* Preço */}
-        <div className="absolute bottom-3 left-3 bg-red-500 text-white text-sm font-bold px-2 py-1 rounded">
-          {formatPrice(house.regularPrice)}
+          {house.created_at && (
+            <p className="text-xs text-gray-500">
+              Publicado {formatDistanceToNow(new Date(house.created_at), { locale: pt, addSuffix: true })}
+            </p>
+          )}
         </div>
-      </div>
-
-      {/* Conteúdo */}
-      <div className="p-4 flex flex-col flex-grow">
-        {/* Avaliação */}
-        <div className="flex items-center mb-1">
-          <div className="flex">{renderStars()}</div>
-          <span className="text-xs text-gray-500 ml-1">(4)</span>
-        </div>
-
-        <h2 className="text-md font-semibold text-gray-800 mb-1 line-clamp-1">
-          {house.name}
-        </h2>
-
-        <div className="flex items-center text-xs text-gray-600 mb-2">
-          <FaMapMarkerAlt className="mr-1 text-[#101828]" />
-          <span className="line-clamp-1">{house.address}</span>
-        </div>
-
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{house.descricao}</p>
-
-        {/* Características */}
-        <div className="flex justify-between text-gray-700 text-xs border-t border-gray-100 pt-3">
-          <Feature icon={<FaBed />} label="Camas" value={house.bedroom} />
-          <Feature icon={<FaBath />} label="Banhos" value={house.bathroom} />
-          <Feature icon={<FaUtensils />} label="Cozinha" value={house.kitchen} />
-          <Feature icon={<FaCar />} label="Parqueamento" value={house.parking ? "Sim" : "Não"} />
-          <Feature icon={<FaCouch />} label="Mobília" value={house.furnished ? "Sim" : "Não"} />
-        </div>
-      </div>
-
-      {/* Botão Ver Detalhes */}
-      <div className="px-4 pb-4 mt-auto">
-        <Link
-          to={`/houses/${house._id}`}
-          className="w-full block text-center bg-[#101828] hover:bg-[#0a1424] text-white py-2 rounded-xl font-medium transition-colors text-sm"
-        >
-          Ver Detalhes
-        </Link>
-      </div>
+      </Link>
     </div>
   );
 }
-
-// Componente pequeno para características
-const Feature = ({ icon, label, value }) => (
-  <div className="flex flex-col items-center">
-    <span className="font-bold">{value}</span>
-    <div className="flex items-center gap-1">
-      {icon}
-      <span>{label}</span>
-    </div>
-  </div>
-);

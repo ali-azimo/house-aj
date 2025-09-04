@@ -1,6 +1,15 @@
 import db from "../db/db.Mysql.js";
 import { errorHandler } from "../utils/erros.js";
 
+/** Normalizar tipo para inglês */
+const normalizeType = (type) => {
+  if (!type) return null;
+  type = type.toLowerCase();
+  if (type === "venda") return "sale";
+  if (type === "renda") return "rent";
+  return type;
+};
+
 /** Função utilitária para parsear imageUrls */
 const parseImageUrls = (house) => {
   if (house.imageUrls && typeof house.imageUrls === "string") {
@@ -12,6 +21,22 @@ const parseImageUrls = (house) => {
     }
   }
   return house;
+};
+
+/** Função utilitária para calcular tempo desde publicação */
+const timeSince = (date) => {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  let interval = Math.floor(seconds / 31536000);
+  if (interval >= 1) return interval + " ano(s) atrás";
+  interval = Math.floor(seconds / 2592000);
+  if (interval >= 1) return interval + " mês(es) atrás";
+  interval = Math.floor(seconds / 86400);
+  if (interval >= 1) return interval + " dia(s) atrás";
+  interval = Math.floor(seconds / 3600);
+  if (interval >= 1) return interval + " hora(s) atrás";
+  interval = Math.floor(seconds / 60);
+  if (interval >= 1) return interval + " minuto(s) atrás";
+  return "Poucos segundos atrás";
 };
 
 /** Criar nova casa */
@@ -34,7 +59,6 @@ export const createHouse = async (req, res, next) => {
       imageUrls
     } = req.body;
 
-    // Validação campos obrigatórios
     if (!name || !descricao || !regularPrice || !bathroom || !bedroom || !kitchen || !type) {
       return next(errorHandler(400, "Todos os campos obrigatórios devem ser preenchidos"));
     }
@@ -81,7 +105,6 @@ export const createHouse = async (req, res, next) => {
     );
 
     res.status(201).json({ success: true, message: "Casa cadastrada com sucesso", houseId: result.insertId });
-
   } catch (error) {
     console.error("Erro ao criar casa:", error);
     next(errorHandler(500, "Erro interno do servidor ao criar casa"));
@@ -91,12 +114,14 @@ export const createHouse = async (req, res, next) => {
 /** Atualizar casa */
 export const updateHouse = async (req, res, next) => {
   try {
+    if (!req.user) return next(errorHandler(401, "Não autenticado"));
+
     const { id } = req.params;
     const [rows] = await db.execute(`SELECT * FROM cad_house WHERE id = ?`, [id]);
     if (rows.length === 0) return next(errorHandler(404, "Casa não encontrada"));
 
     const house = rows[0];
-    if (house.userRef !== req.user.id && req.user.role !== "admin") {
+    if (parseInt(house.userRef) !== parseInt(req.user.id) && req.user.role !== "admin") {
       return next(errorHandler(403, "Sem permissão para atualizar esta casa"));
     }
 
@@ -119,15 +144,17 @@ export const updateHouse = async (req, res, next) => {
       name: name || house.name,
       descricao: descricao || house.descricao,
       address: address || house.address,
-      regularPrice: regularPrice ? parseFloat(regularPrice) : house.regularPrice,
-      discountPrice: discountPrice ? parseFloat(discountPrice) : house.discountPrice,
-      bathroom: bathroom ? parseInt(bathroom) : house.bathroom,
-      bedroom: bedroom ? parseInt(bedroom) : house.bedroom,
-      kitchen: kitchen ? parseInt(kitchen) : house.kitchen,
+      regularPrice: regularPrice != null ? parseFloat(regularPrice) : house.regularPrice,
+      discountPrice: discountPrice != null ? parseFloat(discountPrice) : house.discountPrice,
+      bathroom: bathroom != null ? parseInt(bathroom) : house.bathroom,
+      bedroom: bedroom != null ? parseInt(bedroom) : house.bedroom,
+      kitchen: kitchen != null ? parseInt(kitchen) : house.kitchen,
       parking: parking !== undefined ? (parking ? 1 : 0) : house.parking,
       type: type || house.type,
       offer: offer !== undefined ? (offer ? 1 : 0) : house.offer,
-      imageUrls: Array.isArray(imageUrls) ? imageUrls : parseImageUrls(house).imageUrls
+      imageUrls: Array.isArray(imageUrls) 
+        ? imageUrls 
+        : (house.imageUrls ? parseImageUrls(house).imageUrls : [])
     };
 
     if (cleanedData.offer && cleanedData.discountPrice >= cleanedData.regularPrice) {
@@ -136,7 +163,7 @@ export const updateHouse = async (req, res, next) => {
 
     await db.execute(
       `UPDATE cad_house 
-       SET name=?, descricao=?, address=?, regularPrice=?, discountPrice=?, bathroom=?, bedroom=?, kitchen=?, parking=?, type=?, offer=?, imageUrls=?, updated_at=NOW()
+       SET name=?, descricao=?, address=?, regularPrice=?, discountPrice=?, bathroom=?, bedroom=?, kitchen=?, parking=?, type=?, offer=?, imageUrls=?, created_at=NOW()
        WHERE id=?`,
       [
         cleanedData.name,
@@ -156,12 +183,12 @@ export const updateHouse = async (req, res, next) => {
     );
 
     res.json({ success: true, message: "Casa atualizada com sucesso" });
-
   } catch (error) {
     console.error("Erro ao atualizar casa:", error);
-    next(errorHandler(500, "Erro interno do servidor ao atualizar casa"));
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 /** Apagar casa */
 export const deleteHouse = async (req, res, next) => {
@@ -177,26 +204,9 @@ export const deleteHouse = async (req, res, next) => {
 
     await db.execute(`DELETE FROM cad_house WHERE id = ?`, [id]);
     res.json({ success: true, message: "Casa eliminada com sucesso" });
-
   } catch (error) {
     console.error("Erro ao apagar casa:", error);
     next(errorHandler(500, "Erro interno do servidor ao apagar casa"));
-  }
-};
-
-/** Obter casa por ID */
-export const getHouse = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const [rows] = await db.execute(`SELECT * FROM cad_house WHERE id = ?`, [id]);
-    if (rows.length === 0) return next(errorHandler(404, "Casa não encontrada"));
-
-    const house = parseImageUrls(rows[0]);
-    res.json({ success: true, data: house });
-
-  } catch (error) {
-    console.error("Erro ao buscar casa:", error);
-    next(errorHandler(500, "Erro interno do servidor ao buscar casa"));
   }
 };
 
@@ -213,8 +223,9 @@ export const getHouses = async (req, res, next) => {
     }
 
     if (type) {
+      const normalizedType = normalizeType(type);
       query += " AND type = ?";
-      params.push(type);
+      params.push(normalizedType);
     }
 
     query += " ORDER BY created_at DESC";
@@ -225,12 +236,32 @@ export const getHouses = async (req, res, next) => {
     }
 
     const [rows] = await db.execute(query, params);
-    const houses = rows.map(parseImageUrls);
-    res.json({ success: true, data: houses });
+    const houses = rows.map((house) => {
+      const h = parseImageUrls(house);
+      h.timeSince = timeSince(h.created_at);
+      return h;
+    });
 
+    res.json({ success: true, data: houses });
   } catch (error) {
     console.error("Erro ao listar casas:", error);
     next(errorHandler(500, "Erro interno do servidor ao listar casas"));
+  }
+};
+
+/** Obter casa por ID */
+export const getHouse = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await db.execute(`SELECT * FROM cad_house WHERE id = ?`, [id]);
+    if (rows.length === 0) return next(errorHandler(404, "Casa não encontrada"));
+
+    const house = parseImageUrls(rows[0]);
+    house.timeSince = timeSince(house.created_at);
+    res.json({ success: true, data: house });
+  } catch (error) {
+    console.error("Erro ao buscar casa:", error);
+    next(errorHandler(500, "Erro interno do servidor ao buscar casa"));
   }
 };
 
@@ -248,9 +279,13 @@ export const getUserHouses = async (req, res, next) => {
       [userId]
     );
 
-    const houses = rows.map(parseImageUrls);
-    res.json({ success: true, data: houses });
+    const houses = rows.map((house) => {
+      const h = parseImageUrls(house);
+      h.timeSince = timeSince(h.created_at);
+      return h;
+    });
 
+    res.json({ success: true, data: houses });
   } catch (error) {
     console.error("Erro ao buscar casas do usuário:", error);
     next(errorHandler(500, "Erro interno do servidor ao buscar casas do usuário"));

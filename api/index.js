@@ -5,6 +5,7 @@ import userRoutes from "./routes/user.Route.js";
 import houseRoutes from "./routes/house.Route.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import semRoutes from './routes/semelhante.Route.js';
 
 dotenv.config();
 const app = express();
@@ -18,8 +19,9 @@ app.use(cors({
 }));
 
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/houses", houseRoutes); // Supondo que as rotas de imóveis estão em userRoutes, ajuste conforme necessário
+app.use('/api/similar', semRoutes);
 
 // Middleware de erro
 app.use((err, req, res, next) => {

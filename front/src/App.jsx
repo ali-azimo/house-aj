@@ -13,6 +13,8 @@ import Home from "./pages/Home.jsx";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import ShowItem from "./pages/ShowItem.jsx";
+import HouseDetail from "./pages/HouseDetail.jsx";
+import UpdateHouse from "./pages/UpdateHouse.jsx";
 
 function App() {
   return (
@@ -23,6 +25,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/:type/:id" element={<HouseDetail />} />
 
         {/* Dashboard - Admin e Customer */}
         <Route element={<PrivateRoute allowedRoles={["admin", "customer"]} />}>
@@ -32,6 +35,7 @@ function App() {
               element={<h2 className="text-xl font-bold">Bem-vindo ao Dashboard</h2>}
             />
             <Route path="cad_house" element={<CadHouse />} />
+            <Route path="update-house/:id" element={<UpdateHouse />} />
             <Route path="edit_profile" element={<EditProfile />} />
             <Route path="show_item" element={<ShowItem />} />
 

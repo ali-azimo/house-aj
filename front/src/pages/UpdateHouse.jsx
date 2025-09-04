@@ -1,23 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from '../firebase';
 import { 
-  FaHome, 
-  FaUpload, 
-  FaTrash, 
-  FaDollarSign, 
-  FaTag,
-  FaMapMarkerAlt,
-  FaInfoCircle,
-  FaBed,
-  FaBath,
-  FaUtensils,
-  FaParking,
+  FaHome, FaUpload, FaTrash, FaDollarSign, FaTag,
+  FaMapMarkerAlt, FaInfoCircle, FaBed, FaBath,
+  FaUtensils, FaParking,
 } from 'react-icons/fa';
 
-export default function CadHouse() {
+export default function UpdateHouse() {
   const { currentUser } = useSelector((state) => state.user);
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [files, setFiles] = useState([]); 
   const [imageUploadError, setImageUploadError] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -40,33 +36,35 @@ export default function CadHouse() {
     offer: false,
   });
 
-  const handleImageSubmit = () => {
-    if (files.length > 0 && files.length + formData.imageUrls.length <= 6) {
-      setUploading(true);
-      setImageUploadError(false);
-      const promises = [];
-
-      for (let i = 0; i < files.length; i++) {
-        promises.push(storeImage(files[i]));
-      }
-      
-      Promise.all(promises)
-        .then((urls) => {
-          setFormData({
-            ...formData, 
-            imageUrls: formData.imageUrls.concat(urls),
-          });
-          setUploading(false);
-        })
-        .catch(() => {
-          setImageUploadError('Upload de imagem falhou (máx. 2MB per imagem)');
-          setUploading(false);
+  // 🔹 Buscar dados da casa ao montar
+  useEffect(() => {
+    const fetchHouse = async () => {
+      try {
+        const res = await fetch(`/api/houses/get/${id}`, 
+        { credentials: "include" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Erro ao buscar casa");
+        
+        setFormData({
+          imageUrls: data.data.imageUrls || [],
+          name: data.data.name || "",
+          descricao: data.data.descricao || "",
+          address: data.data.address || "",
+          regularPrice: data.data.regularPrice || "",
+          discountPrice: data.data.discountPrice || "",
+          bathroom: data.data.bathroom || 1,
+          bedroom: data.data.bedroom || 1,
+          kitchen: data.data.kitchen || 1,
+          parking: Boolean(data.data.parking),
+          type: data.data.type || "rent",
+          offer: Boolean(data.data.offer),
         });
-    } else {
-      setImageUploadError('Só pode enviar até 6 imagens por anúncio');
-      setUploading(false);
-    }
-  };
+      } catch (err) {
+        setErrorSubmit(err.message);
+      }
+    };
+    fetchHouse();
+  }, [id]);
 
   const storeImage = async (file) => {
     return new Promise((resolve, reject) => {
@@ -84,6 +82,28 @@ export default function CadHouse() {
     });
   };
 
+  const handleImageSubmit = () => {
+    if (files.length > 0 && files.length + formData.imageUrls.length <= 6) {
+      setUploading(true);
+      setImageUploadError(false);
+
+      Promise.all(files.map(storeImage))
+        .then((urls) => {
+          setFormData((prev) => ({
+            ...prev,
+            imageUrls: prev.imageUrls.concat(urls),
+          }));
+          setUploading(false);
+        })
+        .catch(() => {
+          setImageUploadError('Upload de imagem falhou (máx. 2MB por imagem)');
+          setUploading(false);
+        });
+    } else {
+      setImageUploadError('Só pode enviar até 6 imagens por anúncio');
+    }
+  };
+
   const handleRemoveImage = (index) => {
     setFormData({
       ...formData,
@@ -98,73 +118,52 @@ export default function CadHouse() {
       setFormData({ ...formData, [id]: checked });
       return;
     }
-
-    // Correção para os radio buttons
     if (name === 'type') {
       setFormData({ ...formData, type: value });
       return;
     }
-
-    // Validação para campos numéricos
     if (['regularPrice', 'discountPrice', 'bathroom', 'bedroom', 'kitchen'].includes(id)) {
       if (value && !/^\d*\.?\d*$/.test(value)) return;
     }
-
     setFormData({ ...formData, [id]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     try {
       if (formData.imageUrls.length < 1) return setErrorSubmit('Deve enviar pelo menos uma imagem');
-      if (formData.offer && +formData.discountPrice >= +formData.regularPrice) return setErrorSubmit('O preço com desconto deve ser menor que o preço regular');
+      if (formData.offer && +formData.discountPrice >= +formData.regularPrice) {
+        return setErrorSubmit('O preço com desconto deve ser menor que o preço regular');
+      }
 
       setLoadingSubmit(true);
       setErrorSubmit(false);
       setSuccessSubmit(false);
-      
-      // Garantir que os campos numéricos sejam números
+
       const dataToSubmit = {
         ...formData,
         userRef: currentUser._id || currentUser.id,
         regularPrice: parseFloat(formData.regularPrice) || 0,
-        discountPrice: formData.offer ? (parseFloat(formData.discountPrice) || 0) : 0,
+        discountPrice: formData.offer ? parseFloat(formData.discountPrice) || 0 : 0,
         bathroom: parseInt(formData.bathroom) || 1,
         bedroom: parseInt(formData.bedroom) || 1,
         kitchen: parseInt(formData.kitchen) || 1,
       };
-      
-      const res = await fetch('/api/houses/create', {
-        method: "POST",
+
+      const res = await fetch(`/api/houses/update/${id}`, {
+        method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dataToSubmit),
       });
-      
+
       const data = await res.json();
       setLoadingSubmit(false);
 
-      if (!res.ok) return setErrorSubmit(data.message || data.error || 'Erro ao criar anúncio');
+      if (!res.ok) return setErrorSubmit(data.message || data.error || 'Erro ao atualizar anúncio');
       
-      // Reset form
-      setFormData({
-        imageUrls: [],
-        name: "",
-        descricao: "",
-        address: "",
-        regularPrice: "",
-        discountPrice: "",
-        bathroom: 1,
-        bedroom: 1,
-        kitchen: 1,
-        parking: false,
-        type: "rent",
-        offer: false,
-      });
-      setFiles([]);
-      setSuccessSubmit('Propriedade cadastrada com sucesso!');
-      setTimeout(() => setSuccessSubmit(false), 3000);
+      setSuccessSubmit("Propriedade atualizada com sucesso!");
+      setTimeout(() => navigate(`/dashboard/show_item`), 1500);
 
     } catch (error) {
       setErrorSubmit(error.message);
@@ -179,11 +178,13 @@ export default function CadHouse() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-[#101828] rounded-2xl mb-4 shadow-lg">
             <FaHome className="text-3xl text-white" />
           </div>
-          <h1 className='text-4xl font-bold text-[#101828] mb-3'>Cadastrar Nova Propriedade</h1>
-          <p className="text-gray-600 text-lg">Preencha todos os detalhes para criar um anúncio atrativo</p>
+          <h1 className='text-4xl font-bold text-[#101828] mb-3'>Editar Propriedade</h1>
+          <p className="text-gray-600 text-lg">Atualize os detalhes da sua propriedade</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+          {/* Formulário */}
+
+<div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
           <form onSubmit={handleSubmit} className="p-8">
 
             {/* Informações Básicas */}
@@ -474,7 +475,8 @@ export default function CadHouse() {
             </div>
 
             {/* Botão de Submissão */}
-            <div className="text-center">
+
+             <div className="text-center">
               {errorSubmit && (
                 <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-6 border border-red-200">
                   {errorSubmit}
@@ -491,11 +493,12 @@ export default function CadHouse() {
                 disabled={loadingSubmit}
                 className="px-10 py-4 bg-[#101828] text-white font-semibold rounded-xl hover:bg-[#0a1424] transition-colors disabled:opacity-50 w-full md:w-auto"
               >
-                {loadingSubmit ? 'Enviando...' : 'Cadastrar Propriedade'}
+                {loadingSubmit ? 'Atualizando...' : 'Salvar Alterações'}
               </button>
             </div>
           </form>
         </div>
+
       </div>
     </main>
   );
