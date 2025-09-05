@@ -72,6 +72,20 @@ export const getUser = async (req, res, next) => {
   }
 };
 
+// GET ALL USERS
+export const getAllUsers = async (req, res, next) => {
+  try {
+    if (req.user.role !== "admin") {
+      return next(errorHandler(403, "Apenas administradores podem ver todos os utilizadores"));
+    }
+
+    const [users] = await db.query("SELECT id, username, email, role, avatar, created_at FROM users");
+
+    res.status(200).json({ success: true, data: users });
+  } catch (err) {
+    next(err);
+  }
+};
 // GET CADASTROS DE CASAS (do próprio utilizador)
 export const getCad_house = async (req, res, next) => {
   try {

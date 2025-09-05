@@ -217,7 +217,7 @@ export default function HeaderImobiliaria() {
                             Painel Administrativo
                           </Link>
                           <Link 
-                            to="/dashboard/users" 
+                            to="/" 
                             className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                             onClick={() => setOpen(false)}
                           >
@@ -228,7 +228,7 @@ export default function HeaderImobiliaria() {
                       
                       {userRole === "customer" && (
                         <Link 
-                          to="/customer/dashboard" 
+                          to="/dashboard" 
                           className="block rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           onClick={() => setOpen(false)}
                         >
@@ -366,7 +366,7 @@ export default function HeaderImobiliaria() {
                         Painel Administrativo
                       </Link>
                       <Link
-                        to="/dashboard/users"
+                        to="/users"
                         className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
                         onClick={closeMobileMenu}
                       >
@@ -377,7 +377,7 @@ export default function HeaderImobiliaria() {
                   
                   {userRole === "customer" && (
                     <Link
-                      to="/customer/dashboard"
+                      to="/dashboard"
                       className="block rounded-xl px-3 py-2 text-base text-gray-700 hover:bg-gray-200 transition-colors"
                       onClick={closeMobileMenu}
                     >

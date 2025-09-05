@@ -5,7 +5,8 @@ import {
   deleteUser, 
   signOut, 
   getUser, 
-  getCad_house 
+  getCad_house,
+  getAllUsers
 } from "../controllers/user.Controller.js";
 import { verifyToken } from "../utils/verifyToken.js";
 
@@ -28,5 +29,8 @@ router.get("/:id", getUser);
 
 // obter imóveis cadastrados por um utilizador (user ou admin)
 router.get("/:id/houses", getCad_house);
+
+//OBTER TODOS OS UTILIZADORES (APENAS ADMIN)
+router.get("/", getAllUsers);
 
 export default router;

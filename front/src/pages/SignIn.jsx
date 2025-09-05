@@ -37,8 +37,8 @@ export default function Login() {
     // Define os redirecionamentos baseados no role
     const redirectPaths = {
       admin: "/dashboard",
-      customer: "/customer/dashboard",
-      agent: "/agent/dashboard",
+      customer: "/dashboard",
+      agent: "/dashboard",
       user: "/",
       default: "/"
     };

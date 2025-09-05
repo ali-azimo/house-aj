@@ -15,6 +15,7 @@ import Footer from "./components/Footer.jsx";
 import ShowItem from "./pages/ShowItem.jsx";
 import HouseDetail from "./pages/HouseDetail.jsx";
 import UpdateHouse from "./pages/UpdateHouse.jsx";
+import MyHouses from './components/MyHouses';
 
 function App() {
   return (
@@ -38,12 +39,13 @@ function App() {
             <Route path="update-house/:id" element={<UpdateHouse />} />
             <Route path="edit_profile" element={<EditProfile />} />
             <Route path="show_item" element={<ShowItem />} />
+            <Route path="stats" element={<Stats />} />
+            <Route path="my_houses" element={<MyHouses />} />
 
             {/* Apenas Admin */}
             <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
               <Route path="users" element={<Users />} />
               <Route path="edit_user/:id" element={<EditUser />} />
-              <Route path="stats" element={<Stats />} />
             </Route>
           </Route>
         </Route>

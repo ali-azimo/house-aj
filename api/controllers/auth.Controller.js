@@ -2,6 +2,7 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from "../db/db.Mysql.js";
 import { errorHandler } from "../utils/erros.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 // SIGNUP (público) - apenas user/customer
 export const signup = async (req, res, next) => {
@@ -34,16 +35,19 @@ export const signup = async (req, res, next) => {
   }
 };
 
-// Apenas Admin pode criar user/customer
+// CREATE USER BY ADMIN
 export const createUserByAdmin = async (req, res, next) => {
   try {
-    const { username, email, password, role, phone } = req.body;
+    if (req.user.role !== "admin") {
+      return next(errorHandler(403, "Apenas administradores podem criar utilizadores"));
+    }
+
+    const { username, email, password, role, phone, avatar } = req.body;
 
     if (!username || !email || !password || !role || !phone) {
       return next(errorHandler(400, "Todos os campos são obrigatórios"));
     }
 
-    // Verificar se já existe email
     const [existingUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
     if (existingUser.length > 0) {
       return next(errorHandler(400, "Email já registado"));
@@ -52,15 +56,29 @@ export const createUserByAdmin = async (req, res, next) => {
     const hashedPassword = bcryptjs.hashSync(password, 10);
 
     await db.query(
-      "INSERT INTO users (username, email, password, role, phone) VALUES (?, ?, ?, ?, ?)",
-      [username, email, hashedPassword, role, phone]
+      "INSERT INTO users (username, email, password, role, phone, avatar) VALUES (?, ?, ?, ?, ?, ?)",
+      [username, email, hashedPassword, role, phone, avatar || null]
     );
 
-    res.status(201).json({ message: "Conta criada com sucesso", role });
+    // 📧 enviar email com a senha em texto simples
+    await sendEmail(
+      email,
+      "Bem-vindo ao Imo Project",
+      `
+        <h2>Olá, ${username} 👋</h2>
+        <p>A sua conta foi criada com sucesso no sistema.</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Password:</b> ${password}</p>
+        <p>Recomendamos alterar a password no primeiro login.</p>
+      `
+    );
+
+    res.status(201).json({ message: "Conta criada e email enviado com sucesso", role, success: true });
   } catch (err) {
     next(err);
   }
 };
+
 // SIGNIN
 export const signin = async (req, res, next) => {
   try {

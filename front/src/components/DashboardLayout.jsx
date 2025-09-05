@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { 
   FaHome, 
   FaUser, 
@@ -8,7 +8,10 @@ import {
   FaUsers, 
   FaChartBar,
   FaBars,
-  FaTimes
+  FaTimes,
+  FaList,
+  FaChartLine,
+  FaBuilding
 } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserStart, signOutUserSuccess } from "../redux/user/userSlice";
@@ -18,15 +21,15 @@ export default function DashboardLayout() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
 
   // Acessar o usuário atual do Redux
   const { currentUser } = useSelector((state) => state.user);
   
-  // Extrair o role do usuário (pode estar em diferentes níveis do objeto)
+  // Extrair o role do usuário
   const userRole = currentUser?.role || 
-                  (currentUser?.user && currentUser.user.role) || 
-                  (currentUser?.data && currentUser.data.role) || 
-                  "user";
+  (currentUser?.user && currentUser.user.role) || 
+  (currentUser?.data && currentUser.data.role) || "user";
 
   // Verificar tamanho da tela
   useEffect(() => {
@@ -34,20 +37,19 @@ export default function DashboardLayout() {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
       if (mobile) {
-        setOpen(false); // Fechar sidebar em mobile por padrão
+        setOpen(false);
       } else {
-        setOpen(true); // Abrir sidebar em desktop por padrão
+        setOpen(true);
       }
     };
 
-    handleResize(); // Definir estado inicial
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleLogout = () => {
     dispatch(signOutUserStart());
-    // Simulação: aqui iria a chamada ao backend
     setTimeout(() => {
       dispatch(signOutUserSuccess());
       navigate("/");
@@ -64,8 +66,13 @@ export default function DashboardLayout() {
     }
   };
 
+  // Verificar se a rota ativa corresponde ao link
+  const isActiveLink = (path) => {
+    return location.pathname === path;
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       {/* Overlay para mobile */}
       {isMobile && open && (
         <div 
@@ -77,7 +84,7 @@ export default function DashboardLayout() {
       {/* Sidebar */}
       <div className={`
         fixed lg:relative inset-y-0 left-0 z-30
-        bg-gray-900 text-white 
+        bg-[#101828] text-white 
         ${open ? "w-64" : "w-0 lg:w-16"} 
         transition-all duration-300 flex flex-col
         shadow-lg h-full
@@ -95,7 +102,7 @@ export default function DashboardLayout() {
         <nav className="flex-1 mt-4 overflow-y-auto">
           <Link 
             to="/dashboard" 
-            className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+            className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
             onClick={closeSidebarOnMobile}
           >
             <FaHome className="text-lg min-w-[20px]" /> 
@@ -107,7 +114,7 @@ export default function DashboardLayout() {
             <>
               <Link 
                 to="/dashboard/users" 
-                className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/users") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
                 onClick={closeSidebarOnMobile}
               >
                 <FaUsers className="text-lg min-w-[20px]" /> 
@@ -115,7 +122,7 @@ export default function DashboardLayout() {
               </Link>
               <Link 
                 to="/dashboard/cad_house" 
-                className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/cad_house") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
                 onClick={closeSidebarOnMobile}
               >
                 <FaHouseUser className="text-lg min-w-[20px]" /> 
@@ -123,15 +130,15 @@ export default function DashboardLayout() {
               </Link>
               <Link 
                 to="/dashboard/show_item" 
-                className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/show_item") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
                 onClick={closeSidebarOnMobile}
               >
-                <FaHouseUser className="text-lg min-w-[20px]" /> 
+                <FaBuilding className="text-lg min-w-[20px]" /> 
                 {open && <span>Visualizar Imóvel</span>}
               </Link>
               <Link 
                 to="/dashboard/stats" 
-                className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/stats") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
                 onClick={closeSidebarOnMobile}
               >
                 <FaChartBar className="text-lg min-w-[20px]" /> 
@@ -144,16 +151,32 @@ export default function DashboardLayout() {
           {userRole === "customer" && (
             <>
               <Link 
-                to="/dashboard/cad_house" 
-                className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+                to="/dashboard/my_houses" 
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/my_houses") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
                 onClick={closeSidebarOnMobile}
               >
-                <FaHouseUser className="text-lg min-w-[20px]" /> 
+                <FaList className="text-lg min-w-[20px]" /> 
                 {open && <span>Meus Imóveis</span>}
               </Link>
               <Link 
+                to="/dashboard/cad_house" 
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/cad_house") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
+                onClick={closeSidebarOnMobile}
+              >
+                <FaHouseUser className="text-lg min-w-[20px]" /> 
+                {open && <span>Cadastrar Imóvel</span>}
+              </Link>
+              <Link 
+                to="/dashboard/statistics" 
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/statistics") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
+                onClick={closeSidebarOnMobile}
+              >
+                <FaChartLine className="text-lg min-w-[20px]" /> 
+                {open && <span>Estatísticas</span>}
+              </Link>
+              <Link 
                 to="/dashboard/edit_profile" 
-                className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+                className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/edit_profile") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
                 onClick={closeSidebarOnMobile}
               >
                 <FaUser className="text-lg min-w-[20px]" /> 
@@ -162,11 +185,11 @@ export default function DashboardLayout() {
             </>
           )}
 
-          {/* Links para User normal (se necessário) */}
+          {/* Links para User normal */}
           {userRole === "user" && (
             <Link 
               to="/dashboard/edit_profile" 
-              className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
+              className={`flex items-center gap-3 p-3 transition-colors ${isActiveLink("/dashboard/edit_profile") ? "bg-[#0a1424] text-white" : "hover:bg-gray-700"}`}
               onClick={closeSidebarOnMobile}
             >
               <FaUser className="text-lg min-w-[20px]" /> 
@@ -190,7 +213,7 @@ export default function DashboardLayout() {
         {isMobile && !open && (
           <button 
             onClick={() => setOpen(true)}
-            className="fixed top-4 left-4 z-10 bg-gray-900 text-white p-2 rounded-lg shadow-lg lg:hidden"
+            className="fixed top-4 left-4 z-10 bg-[#101828] text-white p-2 rounded-lg shadow-lg lg:hidden"
           >
             <FaBars />
           </button>

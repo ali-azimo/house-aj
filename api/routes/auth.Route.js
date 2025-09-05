@@ -10,6 +10,6 @@ router.post("/signin", signin);
 router.post("/google", google);
 
 // Apenas Admin pode criar user/customer
-router.post("/create-user", verifyToken, verifyAdmin, createUserByAdmin);
+router.post("/create", verifyToken, verifyAdmin, createUserByAdmin);
 
 export default router;
