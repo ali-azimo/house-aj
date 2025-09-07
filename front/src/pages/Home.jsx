@@ -6,6 +6,7 @@ import SwiperCore from "swiper";
 import "swiper/css/bundle";
 import HouseItems from "../components/HouseItems";
 import MapMoz from "../components/MapMoz";
+import LikeButton from "../components/LikeButton"; // Importa LikeButton
 
 export default function Home() {
   const [offerHouses, setOfferHouses] = useState([]);
@@ -141,13 +142,20 @@ function Section({ title, link, linkText, items }) {
             <div key={house.id || house._id} className="relative">
               <HouseItems house={house} />
 
-              {/* Promoção ou não */}
-              <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-xs font-semibold">
+              {/* Promoção e LikeButton no topo */}
+              <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow flex flex-col items-end gap-1">
                 {house.offer ? (
-                  <span className="text-green-600">Promoção</span>
+                  <span className="text-green-600 text-xs font-semibold">
+                    Promoção
+                  </span>
                 ) : (
-                  <span className="text-red-600">Sem promoção</span>
+                  <span className="text-red-600 text-xs font-semibold">
+                    Sem promoção
+                  </span>
                 )}
+
+                {/* LikeButton */}
+                <LikeButton houseId={house.id || house._id} />
               </div>
             </div>
           ))
