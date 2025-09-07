@@ -1,6 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { MdLocationOn, MdOutlineBathtub, MdBed, MdKitchen } from "react-icons/md";
+import { 
+  MdLocationOn, 
+  MdOutlineBathtub, 
+  MdBed, 
+  MdKitchen, 
+  MdChair, 
+  MdCheckCircle, 
+  MdCancel,
+  MdDirectionsCar // 🚗 Ícone de carro importado
+} from "react-icons/md";
 import { formatDistanceToNow } from "date-fns";
 import pt from "date-fns/locale/pt";
 
@@ -32,6 +41,19 @@ export default function HouseItems({ house }) {
             </div>
           )}
 
+          {/* Status de disponibilidade */}
+          <div className={`flex items-center text-sm font-medium ${house.available ? 'text-green-600' : 'text-red-600'}`}>
+            {house.available ? (
+              <>
+                <MdCheckCircle className="mr-1" /> Disponível
+              </>
+            ) : (
+              <>
+                <MdCancel className="mr-1" /> Ocupada
+              </>
+            )}
+          </div>
+
           <div className="flex justify-between text-sm mt-2 text-gray-700 flex-wrap gap-2">
             {house.bedroom > 0 && (
               <div className="flex items-center gap-1">
@@ -48,7 +70,17 @@ export default function HouseItems({ house }) {
                 <MdKitchen /> {house.kitchen} {house.kitchen > 1 ? "cozinhas" : "cozinha"}
               </div>
             )}
-            {house.parking > 0 && <div>🚗 {house.parking}</div>}
+            {/* Nova linha para sala de estar */}
+            {house.livingroom > 0 && (
+              <div className="flex items-center gap-1">
+                <MdChair /> {house.livingroom} {house.livingroom > 1 ? "salas" : "sala"}
+              </div>
+            )}
+            {house.parking && (
+              <div className="flex items-center gap-1">
+                <MdDirectionsCar /> Estacionamento
+              </div>
+            )}
           </div>
 
           <p className="font-bold mt-2 text-slate-700">

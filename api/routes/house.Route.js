@@ -6,7 +6,8 @@ import {
   getHouse,
   updateHouse,
   deleteHouse,
-  getUserHouses
+  getUserHouses,
+  searchHouses // <- Importar a nova função
 } from "../controllers/house.Controller.js";
 
 const router = express.Router();
@@ -16,6 +17,9 @@ router.post("/create/", verifyToken, isUserOrAdmin, createHouse);
 
 // Listar todos os imóveis com filtros (público)
 router.get("/get", getHouses);
+
+// Pesquisar imóveis avançado (público)
+router.get("/search", searchHouses);
 
 // Obter um imóvel específico por ID (público)
 router.get("/get/:id", getHouse);

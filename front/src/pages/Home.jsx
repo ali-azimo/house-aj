@@ -41,6 +41,36 @@ export default function Home() {
 
   return (
     <div>
+      {/* Swiper de Ofertas */}
+      {offerHouses.length > 0 && (
+        <Swiper navigation>
+          {offerHouses.map((house) => (
+            <SwiperSlide key={house.id || house._id}>
+              <div
+                style={{
+                  background: house.imageUrls?.length
+                    ? `url(${house.imageUrls[0]}) center no-repeat`
+                    : "#ccc",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center center",
+                  height: "500px",
+                }}
+                className="rounded-lg shadow-md relative"
+              >
+                {/* Promoção ou não */}
+                <div className="absolute bottom-4 left-4 bg-white px-3 py-1 rounded shadow-md text-sm font-semibold">
+                  {house.offer ? (
+                    <span className="text-green-600">Promoção disponível</span>
+                  ) : (
+                    <span className="text-red-600">Sem promoção</span>
+                  )}
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      )}
+
       {/* Cabeçalho */}
       <div className="flex flex-col gap-6 p-20 px-3 max-w-6xl mx-auto">
         <h1 className="text-slate-700 font-bold text-3xl lg:text-6xl">
@@ -58,27 +88,6 @@ export default function Home() {
           Começar pesquisa ...
         </Link>
       </div>
-
-      {/* Swiper de Ofertas */}
-      {offerHouses.length > 0 && (
-        <Swiper navigation>
-          {offerHouses.map((house) => (
-            <SwiperSlide key={house.id || house._id}>
-              <div
-                style={{
-                  background: house.imageUrls?.length
-                    ? `url(${house.imageUrls[0]}) center no-repeat`
-                    : "#ccc",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center center",
-                  height: "500px",
-                }}
-                className="rounded-lg shadow-md"
-              ></div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      )}
 
       {/* Secções */}
       <div className="max-w-6xl mx-auto p-3 flex flex-col gap-12 my-10">
@@ -106,7 +115,9 @@ export default function Home() {
 
       {/* Mapa no final da página */}
       <div className="max-w-6xl mx-auto p-3 my-10">
-        <h2 className="text-2xl font-semibold text-slate-600 mb-6">Localização dos Nossos Imóveis</h2>
+        <h2 className="text-2xl font-semibold text-slate-600 mb-6">
+          Localização dos Nossos Imóveis
+        </h2>
         <MapMoz />
       </div>
     </div>
@@ -127,7 +138,18 @@ function Section({ title, link, linkText, items }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {items.length > 0 ? (
           items.map((house) => (
-            <HouseItems house={house} key={house.id || house._id} />
+            <div key={house.id || house._id} className="relative">
+              <HouseItems house={house} />
+
+              {/* Promoção ou não */}
+              <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded shadow text-xs font-semibold">
+                {house.offer ? (
+                  <span className="text-green-600">Promoção</span>
+                ) : (
+                  <span className="text-red-600">Sem promoção</span>
+                )}
+              </div>
+            </div>
           ))
         ) : (
           <p className="text-gray-400 italic">Nenhum imóvel encontrado.</p>

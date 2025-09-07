@@ -14,6 +14,8 @@ import {
   FaBath,
   FaUtensils,
   FaParking,
+  FaCouch,        // Novo ícone para living room
+  FaCalendarCheck // Novo ícone para disponibilidade
 } from 'react-icons/fa';
 
 export default function CadHouse() {
@@ -35,7 +37,9 @@ export default function CadHouse() {
     bathroom: 1,
     bedroom: 1,
     kitchen: 1,
+    livingroom: 1,      // Novo campo
     parking: false,
+    available: true,    // Novo campo
     type: "rent",
     offer: false,
   });
@@ -106,7 +110,7 @@ export default function CadHouse() {
     }
 
     // Validação para campos numéricos
-    if (['regularPrice', 'discountPrice', 'bathroom', 'bedroom', 'kitchen'].includes(id)) {
+    if (['regularPrice', 'discountPrice', 'bathroom', 'bedroom', 'kitchen', 'livingroom'].includes(id)) {
       if (value && !/^\d*\.?\d*$/.test(value)) return;
     }
 
@@ -133,6 +137,7 @@ export default function CadHouse() {
         bathroom: parseInt(formData.bathroom) || 1,
         bedroom: parseInt(formData.bedroom) || 1,
         kitchen: parseInt(formData.kitchen) || 1,
+        livingroom: parseInt(formData.livingroom) || 1, // Novo campo
       };
       
       const res = await fetch('/api/houses/create', {
@@ -158,7 +163,9 @@ export default function CadHouse() {
         bathroom: 1,
         bedroom: 1,
         kitchen: 1,
+        livingroom: 1,      // Novo campo
         parking: false,
+        available: true,    // Novo campo
         type: "rent",
         offer: false,
       });
@@ -174,7 +181,7 @@ export default function CadHouse() {
 
   return (
     <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-[#101828] rounded-2xl mb-4 shadow-lg">
             <FaHome className="text-3xl text-white" />
@@ -243,6 +250,21 @@ export default function CadHouse() {
                     className="w-full border border-gray-300 p-4 rounded-xl focus:ring-2 focus:ring-[#101828] focus:border-transparent transition-all duration-200 bg-white"
                     required
                   />
+                </div>
+
+                {/* Novo campo: Disponibilidade */}
+                <div className="bg-white p-6 rounded-2xl border-2 border-gray-200">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      id="available" 
+                      checked={formData.available} 
+                      onChange={handleChange}
+                      className="w-5 h-5 text-[#101828] rounded focus:ring-[#101828]"
+                    />
+                    <FaCalendarCheck className="text-[#101828]" />
+                    <span className="font-semibold text-[#101828]">Disponível para visitação</span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -341,8 +363,8 @@ export default function CadHouse() {
               </div>
             </div>
 
-            {/* Especificações */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+            {/* Especificações - Aumentado para 6 colunas */}
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-12">
               <div className="bg-gray-50 p-6 rounded-2xl text-center">
                 <FaBed className="text-2xl text-[#101828] mx-auto mb-3" />
                 <label className="block text-sm font-semibold text-[#101828] mb-2">Quartos *</label>
@@ -380,6 +402,22 @@ export default function CadHouse() {
                   type="number"
                   id="kitchen"
                   value={formData.kitchen}
+                  onChange={handleChange}
+                  min="1"
+                  max="5"
+                  className="w-full border border-gray-300 p-3 rounded-xl text-center focus:ring-2 focus:ring-[#101828] bg-white"
+                  required
+                />
+              </div>
+
+              {/* Novo campo: Living Room */}
+              <div className="bg-gray-50 p-6 rounded-2xl text-center">
+                <FaCouch className="text-2xl text-[#101828] mx-auto mb-3" />
+                <label className="block text-sm font-semibold text-[#101828] mb-2">Salas de Estar *</label>
+                <input
+                  type="number"
+                  id="livingroom"
+                  value={formData.livingroom}
                   onChange={handleChange}
                   min="1"
                   max="5"

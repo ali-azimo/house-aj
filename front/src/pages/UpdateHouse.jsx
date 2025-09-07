@@ -6,7 +6,7 @@ import { app } from '../firebase';
 import { 
   FaHome, FaUpload, FaTrash, FaDollarSign, FaTag,
   FaMapMarkerAlt, FaInfoCircle, FaBed, FaBath,
-  FaUtensils, FaParking,
+  FaUtensils, FaParking, FaCouch, FaCalendarCheck
 } from 'react-icons/fa';
 
 export default function UpdateHouse() {
@@ -31,7 +31,9 @@ export default function UpdateHouse() {
     bathroom: 1,
     bedroom: 1,
     kitchen: 1,
+    livingroom: 1,
     parking: false,
+    available: true,
     type: "rent",
     offer: false,
   });
@@ -55,7 +57,9 @@ export default function UpdateHouse() {
           bathroom: data.data.bathroom || 1,
           bedroom: data.data.bedroom || 1,
           kitchen: data.data.kitchen || 1,
+          livingroom: data.data.livingroom || 1,
           parking: Boolean(data.data.parking),
+          available: data.data.available !== undefined ? data.data.available : true,
           type: data.data.type || "rent",
           offer: Boolean(data.data.offer),
         });
@@ -122,7 +126,7 @@ export default function UpdateHouse() {
       setFormData({ ...formData, type: value });
       return;
     }
-    if (['regularPrice', 'discountPrice', 'bathroom', 'bedroom', 'kitchen'].includes(id)) {
+    if (['regularPrice', 'discountPrice', 'bathroom', 'bedroom', 'kitchen', 'livingroom'].includes(id)) {
       if (value && !/^\d*\.?\d*$/.test(value)) return;
     }
     setFormData({ ...formData, [id]: value });
@@ -148,6 +152,7 @@ export default function UpdateHouse() {
         bathroom: parseInt(formData.bathroom) || 1,
         bedroom: parseInt(formData.bedroom) || 1,
         kitchen: parseInt(formData.kitchen) || 1,
+        livingroom: parseInt(formData.livingroom) || 1,
       };
 
       const res = await fetch(`/api/houses/update/${id}`, {
@@ -173,7 +178,7 @@ export default function UpdateHouse() {
 
   return (
     <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-[#101828] rounded-2xl mb-4 shadow-lg">
             <FaHome className="text-3xl text-white" />
@@ -182,9 +187,7 @@ export default function UpdateHouse() {
           <p className="text-gray-600 text-lg">Atualize os detalhes da sua propriedade</p>
         </div>
 
-          {/* Formulário */}
-
-<div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
           <form onSubmit={handleSubmit} className="p-8">
 
             {/* Informações Básicas */}
@@ -244,6 +247,21 @@ export default function UpdateHouse() {
                     className="w-full border border-gray-300 p-4 rounded-xl focus:ring-2 focus:ring-[#101828] focus:border-transparent transition-all duration-200 bg-white"
                     required
                   />
+                </div>
+
+                {/* Novo campo: Disponibilidade */}
+                <div className="bg-white p-6 rounded-2xl border-2 border-gray-200">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      id="available" 
+                      checked={formData.available} 
+                      onChange={handleChange}
+                      className="w-5 h-5 text-[#101828] rounded focus:ring-[#101828]"
+                    />
+                    <FaCalendarCheck className="text-[#101828]" />
+                    <span className="font-semibold text-[#101828]">Disponível para visitação</span>
+                  </label>
                 </div>
               </div>
             </div>
@@ -342,8 +360,8 @@ export default function UpdateHouse() {
               </div>
             </div>
 
-            {/* Especificações */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-12">
+            {/* Especificações - Aumentado para 6 colunas */}
+            <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-12">
               <div className="bg-gray-50 p-6 rounded-2xl text-center">
                 <FaBed className="text-2xl text-[#101828] mx-auto mb-3" />
                 <label className="block text-sm font-semibold text-[#101828] mb-2">Quartos *</label>
@@ -389,6 +407,22 @@ export default function UpdateHouse() {
                 />
               </div>
 
+              {/* Novo campo: Living Room */}
+              <div className="bg-gray-50 p-6 rounded-2xl text-center">
+                <FaCouch className="text-2xl text-[#101828] mx-auto mb-3" />
+                <label className="block text-sm font-semibold text-[#101828] mb-2">Salas de Estar *</label>
+                <input
+                  type="number"
+                  id="livingroom"
+                  value={formData.livingroom}
+                  onChange={handleChange}
+                  min="1"
+                  max="5"
+                  className="w-full border border-gray-300 p-3 rounded-xl text-center focus:ring-2 focus:ring-[#101828] bg-white"
+                  required
+                />
+              </div>
+
               <div className="bg-gray-50 p-6 rounded-2xl text-center flex items-center justify-center">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input 
@@ -420,7 +454,7 @@ export default function UpdateHouse() {
                   
                   <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-[#101828] transition-colors group">
                     <FaUpload className="mx-auto text-gray-400 group-hover:text-[#101828] mb-4 text-3xl" />
-                    <p className="text-sm text-gray-600 mb-2">Arraste e solte imagens aqui ou</p>
+                    <p className="text-sm text-gray-600 mb-2">Arraste и solte imagens aqui ou</p>
                     <label className="inline-block bg-[#101828] text-white px-6 py-3 rounded-xl cursor-pointer hover:bg-[#0a1424] transition-colors">
                       <span>Selecionar Arquivos</span>
                       <input 
@@ -475,8 +509,7 @@ export default function UpdateHouse() {
             </div>
 
             {/* Botão de Submissão */}
-
-             <div className="text-center">
+            <div className="text-center">
               {errorSubmit && (
                 <div className="bg-red-50 text-red-700 p-4 rounded-xl mb-6 border border-red-200">
                   {errorSubmit}
@@ -498,7 +531,6 @@ export default function UpdateHouse() {
             </div>
           </form>
         </div>
-
       </div>
     </main>
   );

@@ -17,43 +17,39 @@ export default function HouseDetail({ type = 'houses' }) {
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
 
- useEffect(() => {
-  const fetchItem = async () => {
-    try {
-      setLoading(true);
-      console.log("Buscando:", `/api/${type}/get/${id}`);
-      const res = await fetch(`/api/${type}/get/${id}`, {
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-
-      if (!res.ok) throw new Error('Erro na resposta da API');
-      const raw = await res.json();
-      console.log("Resposta da API:", raw);
-
-      // Garante que pega os dados certos (diretos ou dentro de .data)
-      const data = raw.data ? raw.data : raw;
-
-      if (!data || data.success === false) {
-        setError(true);
-        setItem(null);
-      } else {
-        setItem({
-          ...data,
-          imageUrls: Array.isArray(data.imageUrls) ? data.imageUrls : [],
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/${type}/get/${id}`, {
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
         });
-        setError(false);
-      }
-    } catch (err) {
-      console.error('Erro ao buscar imóvel:', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  fetchItem();
-}, [id, type]);
+        if (!res.ok) throw new Error('Erro na resposta da API');
+        const raw = await res.json();
+        const data = raw.data ? raw.data : raw;
+
+        if (!data || data.success === false) {
+          setError(true);
+          setItem(null);
+        } else {
+          setItem({
+            ...data,
+            imageUrls: Array.isArray(data.imageUrls) ? data.imageUrls : [],
+          });
+          setError(false);
+        }
+      } catch (err) {
+        console.error('Erro ao buscar imóvel:', err);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItem();
+  }, [id, type]);
 
   if (loading)
     return (
@@ -80,10 +76,22 @@ export default function HouseDetail({ type = 'houses' }) {
         <Swiper navigation pagination={{ clickable: true }} loop modules={[Navigation, Pagination]}>
           {images.map((url, index) => (
             <SwiperSlide key={index}>
-              <div className="w-full h-[400px] md:h-[500px] bg-cover bg-center" style={{ backgroundImage: `url(${url})` }} />
+              <div
+                className="w-full h-[400px] md:h-[500px] bg-cover bg-center"
+                style={{ backgroundImage: `url(${url})` }}
+              />
             </SwiperSlide>
           ))}
         </Swiper>
+
+        {/* Selo Promoção no carrossel */}
+        <div className="absolute top-4 left-4 bg-white px-4 py-1 rounded shadow-md text-sm font-semibold z-20">
+          {item.offer ? (
+            <span className="text-green-600">Promoção disponível</span>
+          ) : (
+            <span className="text-red-600">Sem promoção</span>
+          )}
+        </div>
 
         {/* Botão Copiar URL */}
         <div className="fixed top-[13%] right-[3%] z-10">
@@ -184,12 +192,15 @@ export default function HouseDetail({ type = 'houses' }) {
                   <span className="text-gray-600">Tipo:</span>
                   <span className="font-medium">{item.type === 'rent' ? 'Arrendamento' : 'Venda'}</span>
                 </div>
-                {item.offer && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Oferta:</span>
-                    <span className="font-medium text-green-600">Disponível</span>
-                  </div>
-                )}
+
+                {/* Promoção */}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Promoção:</span>
+                  <span className={`font-medium ${item.offer ? "text-green-600" : "text-red-600"}`}>
+                    {item.offer ? "Promoção disponível" : "Sem promoção"}
+                  </span>
+                </div>
+
                 {item.created_at && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Publicado:</span>
