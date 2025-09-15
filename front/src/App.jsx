@@ -17,6 +17,9 @@ import HouseDetail from "./pages/HouseDetail.jsx";
 import UpdateHouse from "./pages/UpdateHouse.jsx";
 import MyHouses from './components/MyHouses';
 import Search from './pages/Search.jsx'
+import Comprar from "./pages/Comprar.jsx";
+import Arrendar from "./pages/Arrendar.jsx";
+import Sobre from "./pages/Sobre.jsx";
 
 
 function App() {
@@ -29,6 +32,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/arrendar" element={<Arrendar />} />
+          <Route path="/comprar" element={<Comprar/>} />
+          <Route path="/sobre" element={<Sobre/>} />
+
           <Route path="/:type/:id" element={<HouseDetail />} />
           <Route path='/search' element={<Search/>}/>
 

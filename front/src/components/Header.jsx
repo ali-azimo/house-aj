@@ -19,7 +19,7 @@ const navLinks = [
   { label: "Início", href: "/" },
   { label: "Comprar", href: "/comprar" },
   { label: "Arrendar", href: "/arrendar" },
-  { label: "Sobre", href: "/about" }
+  { label: "Sobre", href: "/sobre" }
 ];
 
 // Função para obter ícone e cor baseado no tipo de usuário
